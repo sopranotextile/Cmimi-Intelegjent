@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Çmimi i Inteligjent – Rroba Grash</title>
+  <style>
+    :root {
+      --bg: #f4f6f9; --card: #ffffff; --primary: #1a73e8; --primary-dark: #1557b0;
+      --success: #0d904f; --danger: #d93025; --warning: #f9ab00;
+      --text: #202124; --muted: #5f6368; --border: #dadce0;
+      --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5;
+      padding: 16px; max-width: 820px; margin: 0 auto;
+    }
+    h1 { font-size: 1.45rem; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .mode-switch {
+      display: flex; gap: 8px; margin-bottom: 20px;
+      background: #e8eaed; padding: 4px; border-radius: 10px; width: fit-content;
+    }
+    .mode-btn {
+      border: none; background: transparent; padding: 8px 18px; border-radius: 8px;
+      font-weight: 600; font-size: 0.9rem; cursor: pointer; color: var(--muted);
+    }
+    .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    .card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 20px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 1.05rem; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+    input, select {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.95rem; background: #fff;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,115,232,.15); }
+    .variant-row {
+      display: grid; grid-template-columns: 1.2fr 0.8fr 0.7fr 0.7fr auto;
+      gap: 8px; align-items: end; margin-bottom: 8px;
+    }
+    @media (max-width: 560px) {
+      .variant-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .variant-row .remove-btn { grid-column: 1 / -1; }
+    }
+    .btn { border: none; border-radius: 8px; padding: 10px 16px; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: #fce8e6; color: var(--danger); padding: 8px 12px; }
+    .btn-add { background: #e6f4ea; color: var(--success); width: 100%; margin-top: 4px; }
+    .reasons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width: 500px) { .reasons-grid { grid-template-columns: 1fr; } }
+    .reason-item {
+      display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+    }
+    .reason-item:hover { border-color: #bdc1c6; }
+    .reason-item.checked { border-color: var(--primary); background: #e8f0fe; }
+    .reason-item input { width: auto; margin-top: 3px; }
+    .reason-item span { font-size: 0.88rem; line-height: 1.35; }
+    .calc-btn { width: 100%; padding: 14px; font-size: 1.05rem; margin-top: 8px; }
+    #result-area { display: none; }
+    .action-card { text-align: center; padding: 24px 16px; border-radius: var(--radius); margin-bottom: 16px; }
+    .action-card.up { background: #e6f4ea; border: 2px solid #34a853; }
+    .action-card.down { background: #fce8e6; border: 2px solid #ea4335; }
+    .action-card.keep { background: #fef7e0; border: 2px solid #f9ab00; }
+    .action-label { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+    .action-card.up .action-label { color: var(--success); }
+    .action-card.down .action-label { color: var(--danger); }
+    .action-card.keep .action-label { color: #e37400; }
+    .new-price { font-size: 2.1rem; font-weight: 800; margin: 4px 0; }
+    .price-diff { font-size: 0.95rem; color: var(--muted); }
+    .todo-list, .problems-list, .fix-list { list-style: none; }
+    .todo-list li, .problems-list li, .fix-list li {
+      padding: 10px 12px; background: #f8f9fa; border-radius: 8px;
+      margin-bottom: 6px; font-size: 0.92rem; display: flex; gap: 10px; align-items: flex-start;
+    }
+    .todo-list li::before { content: "→"; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+    .problems-list li::before { content: "⚠"; flex-shrink: 0; }
+    .fix-list li::before { content: "💡"; flex-shrink: 0; }
+    .fix-card {
+      background: #e6f4ea; border: 1px solid #34a853; border-radius: 10px;
+      padding: 14px; margin-top: 12px;
+    }
+    .fix-card h3 { font-size: 0.95rem; color: var(--success); margin-bottom: 8px; }
+    .manager-only { display: none; }
+    body.manager .manager-only { display: block; }
+    .worker-hint {
+      font-size: 0.85rem; color: var(--muted); background: #e8f0fe;
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;
+    }
+    .warning-box {
+      background: #fef7e0; border: 1px solid #f9ab00; color: #b06000;
+      padding: 12px 14px; border-radius: 8px; font-size: 0.9rem;
+      margin-bottom: 12px; display: none;
+    }
+    .footer-note { text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 24px; padding-bottom: 20px; }
+    .save-status { font-size: 0.8rem; color: var(--success); text-align: right; margin-top: 6px; opacity: 0; transition: opacity .3s; }
+    .save-status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>Çmimi i Inteligjent</h1>
+  <p class="subtitle">Vendime të shpejta & të sigurta për stokun e rrobave të grave</p>
+
+
+  <div class="mode-switch">
+    <button class="mode-btn active" id="btn-worker" onclick="setMode('worker')">Punëtor</button>
+    <button class="mode-btn" id="btn-manager" onclick="setMode('manager')">Menaxher</button>
+  </div>
+
+
+  <div class="card">
+    <h2>1. Të dhënat e produktit</h2>
+    <div class="grid-2">
+      <div>
+        <label for="prod-name">Emri i produktit</label>
+        <input type="text" id="prod-name" placeholder="p.sh. Bluzë me mëngë të gjata" />
+      </div>
+      <div>
+        <label for="category">Kategoria</label>
+        <select id="category">
+          <option value="A">A – Shitje e shpejtë (bazë)</option>
+          <option value="B" selected>B – Normale</option>
+          <option value="C">C – e ngadaltë / sezonale</option>
+        </select>
+      </div>
+      <div>
+        <label for="current-price">Çmimi aktual (€)</label>
+        <input type="number" id="current-price" min="0" step="0.01" placeholder="29.90" />
+      </div>
+      <div>
+        <label for="cost">Kostoja (€)</label>
+        <input type="number" id="cost" min="0" step="0.01" placeholder="12.50" />
+      </div>
+      <div>
+        <label for="days-online">Ditë në shitje</label>
+        <input type="number" id="days-online" min="0" step="1" placeholder="14" />
+      </div>
+      <div>
+        <label for="season">Faza e sezonit</label>
+        <select id="season">
+          <option value="early">Fillim sezoni</option>
+          <option value="mid" selected>Mes sezoni</option>
+          <option value="late">Fund sezoni</option>
+          <option value="clearance">Pastrimi i stokut</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="card">
+    <h2>2. Variantet (ngjyrë + masë + copë)</h2>
+    <p class="worker-hint">Shto çdo kombinim ngjyrë + masë që ke. Shkruaj sa copë ke shitur dhe sa kanë mbetur.</p>
+    <div id="variants-container"></div>
+    <button class="btn btn-add" onclick="addVariant()">+ Shto variant (ngjyrë + masë)</button>
+  </div>
+
+
+  <div class="card">
+    <h2>3. Pse po ngec? (zgjidh ato që vleinë)</h2>
+    <p class="worker-hint">Shëno arsyet reale. Pas llogaritjes do të shfaqen këshilla konkrete se si ta shesësh më mirë.</p>
+    <div class="reasons-grid" id="reasons-grid"></div>
+  </div>
+
+
+  <button class="btn btn-primary calc-btn" onclick="calculate()">Llogarit rekomandimin</button>
+  <div class="save-status" id="save-status">Draft u ruajt ✓</div>
+
+
+  <div id="result-area">
+    <div class="card" style="margin-top:20px;">
+      <div id="warning-box" class="warning-box"></div>
+      <div id="action-card" class="action-card">
+        <div class="action-label" id="action-label">—</div>
+        <div class="new-price" id="new-price">—</div>
+        <div class="price-diff" id="price-diff"></div>
+      </div>
+      <h2>Çfarë duhet të bësh tani</h2>
+      <ul class="todo-list" id="todo-list"></ul>
+      <div id="fixes-section" style="display:none; margin-top:18px;">
+        <div class="fix-card">
+          <h3>💡 Si ta shesësh më mirë (sipas arsyeve që zgjodhe)</h3>
+          <ul class="fix-list" id="fixes-list"></ul>
+        </div>
+      </div>
+      <div id="problems-section" style="margin-top:18px; display:none;">
+        <h2>Variantet që po ngecin</h2>
+        <ul class="problems-list" id="problems-list"></ul>
+      </div>
+      <div class="manager-only" style="margin-top:18px;">
+        <h2>Detaje për menaxherin</h2>
+        <ul class="todo-list" id="manager-details"></ul>
+      </div>
+    </div>
+  </div>
+
+
+  <p class="footer-note">
+    Të dhënat ruhen lokalisht në këtë pajisje. Asnjë e dhënë nuk dërgohet në internet.<br>
+    Çmimi minimal = Kosto × 1.15 (mbrojtje e marzhës)
+  </p>
+
+
+  <script>
+    const REASONS = [
+      {
+        id: "size_curve",
+        label: "Masat e gabuara (shumë S/M, pak L/XL ose anasjelltas)",
+        impact: 0.06,
+        fixes: [
+          "Zhvendos masat e mbetura në vitrinë ose raft më të dukshëm",
+          "Bëj ofertë 'Bli 2, merr zbritje' vetëm për masat e tepërta",
+          "Kontrollo nëse klientët pyesin për masa të tjera – porosit ato nëse është e mundur",
+          "Vendos tabelë 'Masa të disponueshme' që të mos humbasin kohë"
+        ]
+      },
+      {
+        id: "bad_color",
+        label: "Ngjyra e dobët / nuk pëlqehet këtë sezon",
+        impact: 0.07,
+        fixes: [
+          "Vendose pranë ngjyrave që po shiten mirë (kontrast i mirë)",
+          "Ndrysho foton / manekinin – tregoje me aksesorë të fortë",
+          "Bëj kombinim 'look' me pjesë të tjera që po shiten",
+          "Ul pak çmimin ose shto dhuratë të vogël (rrip, çanta e vogël)"
+        ]
+      },
+      {
+        id: "trend_shift",
+        label: "Trendi ka ndryshuar (stili është jashtë modes)",
+        impact: 0.09,
+        fixes: [
+          "Prezantoje si 'klasik' ose 'evergreen' në vend të 'trend'",
+          "Kombinoje me pjesë të reja që janë në modë",
+          "Ul çmimin më agresivisht dhe pastro stokun shpejt",
+          "Vendose në zonën e 'Outlet / Last chance'"
+        ]
+      },
+      {
+        id: "weather",
+        label: "Moti nuk përputhet (shumë i nxehtë / i ftohtë)",
+        impact: 0.05,
+        fixes: [
+          "Nëse është i nxehtë: thekso materialin e lehtë / frymëmarrës",
+          "Nëse është i ftohtë: tregoje me shtresa (layering)",
+          "Prit 1–2 javë nëse sezoni po ndryshon shpejt",
+          "Zhvendose në magazinë përkohësisht dhe nxirr diçka më të përshtatshme"
+        ]
+      },
+      {
+        id: "price_sens",
+        label: "Çmimi i ndjeshëm / inflacion – klientët hezitojnë",
+        impact: 0.08,
+        fixes: [
+          "Shto vlerë: 'cilësi e mirë', 'do të zgjasë shumë', 'kosto për veshje'",
+          "Ofro pagesë me këste ose 'paguaj më vonë' nëse është e mundur",
+          "Krahasoje me çmimin e tregut (nëse je më i lirë)",
+          "Bëj zbritje të vogël + dhuratë (më mirë se zbritje e madhe)"
+        ]
+      },
+      {
+        id: "material",
+        label: "Materiali duket i dobët ose jo komod",
+        impact: 0.06,
+        fixes: [
+          "Lejo klientët ta provojnë dhe ta prekin (touch & feel)",
+          "Shpjego përfitimet: 'nuk rrudhet', 'i lehtë', 'i ngrohtë'",
+          "Vendos prova sociale: 'Klientët thonë që është shumë komod'",
+          "Nëse materiali është vërtet i dobët – ul çmimin dhe pastro shpejt"
+        ]
+      },
+      {
+        id: "overbuy",
+        label: "U blenë shumë copë (overbuying)",
+        impact: 0.04,
+        fixes: [
+          "Ndaj stokun: një pjesë në vitrinë, një pjesë në magazinë",
+          "Bëj 'Bundle' me produkte të tjera (bli 2 me zbritje)",
+          "Dërgo te dyqane të tjera / shit online me çmim më të ulët",
+          "Planifiko më mirë porosinë e ardhshme (mëso nga gabimi)"
+        ]
+      },
+      {
+        id: "late_arrival",
+        label: "Arriti vonë në dyqan (pas pikut të sezonit)",
+        impact: 0.05,
+        fixes: [
+          "Trajtoje si 'early next season' nëse është e mundur",
+          "Ul çmimin menjëherë për të tërhequr vëmendjen",
+          "Vendose në zonën e re të ardhurave me etiketë 'Sapo ka ardhur'",
+          "Nëse sezoni ka mbaruar – pastro me zbritje të fortë"
+        ]
+      }
+    ];
+
+
+    let mode = "worker";
+    let variants = [];
+
+
+    function init() {
+      renderReasons();
+      addVariant();
+      loadDraft();
+      document.querySelectorAll("input, select").forEach(el => {
+        el.addEventListener("input", clearResult);
+        el.addEventListener("change", clearResult);
+      });
+    }
+
+
+    function setMode(m) {
+      mode = m;
+      document.body.classList.toggle("manager", m === "manager");
+      document.getElementById("btn-worker").classList.toggle("active", m === "worker");
+      document.getElementById("btn-manager").classList.toggle("active", m === "manager");
+      if (m === "manager") {
+        if (!confirm("Po kalon në modin Menaxher. A je i sigurt?")) {
+          setMode("worker");
+          return;
+        }
+      }
+    }
+
+
+    function renderReasons() {
+      const grid = document.getElementById("reasons-grid");
+      grid.innerHTML = "";
+      REASONS.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "reason-item";
+        div.dataset.id = r.id;
+        div.onclick = () => toggleReason(div);
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = "reason-" + r.id;
+        cb.onclick = (e) => e.stopPropagation();
+        const span = document.createElement("span");
+        span.textContent = r.label;
+        div.appendChild(cb);
+        div.appendChild(span);
+        grid.appendChild(div);
+      });
+    }
+
+
+    function toggleReason(div) {
+      const cb = div.querySelector("input");
+      cb.checked = !cb.checked;
+      div.classList.toggle("checked", cb.checked);
+      clearResult();
+      saveDraft();
+    }
+
+
+    function addVariant(data) {
+      data = data || {};
+      const id = Date.now() + Math.random().toString(36).slice(2, 6);
+      variants.push({ id: id, color: data.color || "", size: data.size || "", sold: data.sold || 0, remaining: data.remaining || 0 });
+      renderVariants();
+      saveDraft();
+    }
+
+
+    function removeVariant(id) {
+      if (variants.length <= 1) {
+        alert("Duhet të ketë të paktën një variant.");
+        return;
+      }
+      variants = variants.filter(function(v) { return v.id !== id; });
+      renderVariants();
+      clearResult();
+      saveDraft();
+    }
+
+
+    function renderVariants() {
+      const container = document.getElementById("variants-container");
+      container.innerHTML = "";
+      variants.forEach(function(v) {
+        const row = document.createElement("div");
+        row.className = "variant-row";
+
+
+        const colorWrap = document.createElement("div");
+        const colorLabel = document.createElement("label");
+        colorLabel.textContent = "Ngjyra";
+        const colorInput = document.createElement("input");
+        colorInput.type = "text";
+        colorInput.placeholder = "p.sh. Kafe";
+        colorInput.value = v.color;
+        colorInput.oninput = function() { v.color = colorInput.value; clearResult(); saveDraft(); };
+        colorWrap.appendChild(colorLabel);
+        colorWrap.appendChild(colorInput);
+
+
+        const sizeWrap = document.createElement("div");
+        const sizeLabel = document.createElement("label");
+        sizeLabel.textContent = "Masa";
+        const sizeInput = document.createElement("input");
+        sizeInput.type = "text";
+        sizeInput.placeholder = "S / M / L…";
+        sizeInput.value = v.size;
+        sizeInput.oninput = function() { v.size = sizeInput.value; clearResult(); saveDraft(); };
+        sizeWrap.appendChild(sizeLabel);
+        sizeWrap.appendChild(sizeInput);
+
+
+        const soldWrap = document.createElement("div");
+        const soldLabel = document.createElement("label");
+        soldLabel.textContent = "Shitur (copë)";
+        const soldInput = document.createElement("input");
+        soldInput.type = "number";
+        soldInput.min = "0";
+        soldInput.step = "1";
+        soldInput.value = v.sold;
+        soldInput.oninput = function() { v.sold = Math.max(0, parseInt(soldInput.value) || 0); clearResult(); saveDraft(); };
+        soldWrap.appendChild(soldLabel);
+        soldWrap.appendChild(soldInput);
+
+
+        const remWrap = document.createElement("div");
+        const remLabel = document.createElement("label");
+        remLabel.textContent = "Mbetur (copë)";
+        const remInput = document.createElement("input");
+        remInput.type = "number";
+        remInput.min = "0";
+        remInput.step = "1";
+        remInput.value = v.remaining;
+        remInput.oninput = function() { v.remaining = Math.max(0, parseInt(remInput.value) || 0); clearResult(); saveDraft(); };
+        remWrap.appendChild(remLabel);
+        remWrap.appendChild(remInput);
+
+
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "btn btn-danger remove-btn";
+        removeBtn.textContent = "Fshi";
+        removeBtn.onclick = function() { removeVariant(v.id); };
+
+
+        row.appendChild(colorWrap);
+        row.appendChild(sizeWrap);
+        row.appendChild(soldWrap);
+        row.appendChild(remWrap);
+        row.appendChild(removeBtn);
+        container.appendChild(row);
+      });
+    }
+
+
+    function calculate() {
+      const currentPrice = parseFloat(document.getElementById("current-price").value);
+      const cost = parseFloat(document.getElementById("cost").value);
+      const days = parseInt(document.getElementById("days-online").value) || 0;
+      const season = document.getElementById("season").value;
+      const category = document.getElementById("category").value;
+
+
+      const warningBox = document.getElementById("warning-box");
+      warningBox.style.display = "none";
+      warningBox.textContent = "";
+
+
+      if (isNaN(currentPrice) || currentPrice <= 0) {
+        showWarning("Vendos çmimin aktual (më të madh se 0).");
+        return;
+      }
+      if (isNaN(cost) || cost < 0) {
+        showWarning("Vendos koston (0 ose më shumë).");
+        return;
+      }
+      if (variants.length === 0) {
+        showWarning("Shto të paktën një variant (ngjyrë + masë).");
+        return;
+      }
+
+
+      const hasData = variants.some(function(v) {
+        return (v.sold > 0 || v.remaining > 0) && (v.color || v.size);
+      });
+      if (!hasData) {
+        showWarning("Plotëso të paktën një variant me ngjyrë/masë dhe copë (shitur ose mbetur).");
+        return;
+      }
+
+
+      let totalSold = 0;
+      let totalRemaining = 0;
+      variants.forEach(function(v) {
+        totalSold += v.sold || 0;
+        totalRemaining += v.remaining || 0;
+      });
+      const totalPieces = totalSold + totalRemaining;
+      const sellThrough = totalPieces > 0 ? totalSold / totalPieces : 0;
+
+
+      let adj = 0;
+      if (sellThrough >= 0.75) adj = 0.08;
+      else if (sellThrough >= 0.55) adj = 0.03;
+      else if (sellThrough >= 0.40) adj = 0;
+      else if (sellThrough >= 0.25) adj = -0.08;
+      else if (sellThrough >= 0.12) adj = -0.15;
+      else adj = -0.22;
+
+
+      if (totalRemaining > 15 && sellThrough < 0.4) adj -= 0.05;
+      if (totalRemaining > 30 && sellThrough < 0.3) adj -= 0.04;
+
+
+      if (days > 45 && sellThrough < 0.5) adj -= 0.06;
+      else if (days > 30 && sellThrough < 0.4) adj -= 0.04;
+      else if (days > 21 && sellThrough < 0.35) adj -= 0.03;
+
+
+      const seasonAdj = { early: 0.02, mid: 0, late: -0.06, clearance: -0.12 };
+      adj += seasonAdj[season] || 0;
+
+
+      const catAdj = { A: 0.03, B: 0, C: -0.04 };
+      adj += catAdj[category] || 0;
+
+
+      let reasonImpact = 0;
+      const selectedReasons = [];
+      REASONS.forEach(function(r) {
+        const cb = document.getElementById("reason-" + r.id);
+        if (cb && cb.checked) {
+          reasonImpact += r.impact;
+          selectedReasons.push(r);
+        }
+      });
+      reasonImpact = Math.min(reasonImpact, 0.22);
+      adj -= reasonImpact;
+
+
+      const isNew = days <= 7;
+      if (isNew && adj < 0) adj = 0;
+
+
+      let newPrice = currentPrice * (1 + adj);
+      const minPrice = cost * 1.15;
+      let floorApplied = false;
+      if (newPrice < minPrice) {
+        newPrice = minPrice;
+        floorApplied = true;
+      }
+      newPrice = nicePrice(newPrice);
+
+
+      const diff = newPrice - currentPrice;
+      let action, actionClass;
+      if (diff > 0.4) { action = "Rrit çmimin"; actionClass = "up"; }
+      else if (diff < -0.4) { action = "Ul çmimin"; actionClass = "down"; }
+      else { action = "Mbaj çmimin"; actionClass = "keep"; }
+
+
+      document.getElementById("result-area").style.display = "block";
+      document.getElementById("action-card").style.display = "block";
+
+
+      const actionCard = document.getElementById("action-card");
+      actionCard.className = "action-card " + actionClass;
+      document.getElementById("action-label").textContent = action;
+      document.getElementById("new-price").textContent = newPrice.toFixed(2) + " €";
+
+
+      const diffEl = document.getElementById("price-diff");
+      if (Math.abs(diff) < 0.4) {
+        diffEl.textContent = "Ndryshimi është shumë i vogël – më mirë mbaje";
+      } else {
+        const sign = diff > 0 ? "+" : "";
+        diffEl.textContent = sign + diff.toFixed(2) + " €  (" + (diff > 0 ? "rritje" : "ulje") + " " + Math.abs((diff / currentPrice) * 100).toFixed(1) + "%)";
+      }
+
+
+      const todos = [];
+      if (actionClass === "down") {
+        todos.push("Ndrysho çmimin në raft dhe në sistem tani.");
+        todos.push("Vendos etiketë të re me çmimin e ri.");
+      } else if (actionClass === "up") {
+        todos.push("Rrit çmimin në sistem dhe në raft.");
+        todos.push("Sigurohu që produkti duket premium (pozicion, ndriçim).");
+      } else {
+        todos.push("Mos e prek çmimin për momentin.");
+        todos.push("Monitoro shitjet për 5–7 ditë të tjera.");
+      }
+      if (isNew) todos.push("Produkt i ri (≤7 ditë) – nuk lejohet ulje automatike.");
+      if (floorApplied) todos.push("Çmimi u mbajt mbi kufirin minimal (kosto × 1.15) për të mbrojtur marzhën.");
+      if (totalRemaining > 20 && sellThrough < 0.35) {
+        todos.push("Ka shumë stok të mbetur – konsidero promocion të vogël ose zhvendosje në vitrinë.");
+      }
+
+
+      const todoList = document.getElementById("todo-list");
+      todoList.innerHTML = "";
+      todos.forEach(function(t) {
+        const li = document.createElement("li");
+        li.textContent = t;
+        todoList.appendChild(li);
+      });
+
+
+      const fixesSection = document.getElementById("fixes-section");
+      const fixesList = document.getElementById("fixes-list");
+      fixesList.innerHTML = "";
+      if (selectedReasons.length > 0) {
+        fixesSection.style.display = "block";
+        selectedReasons.forEach(function(r) {
+          r.fixes.forEach(function(fix) {
+            const li = document.createElement("li");
+            li.textContent = fix;
+            fixesList.appendChild(li);
+          });
+        });
+      } else {
+        fixesSection.style.display = "none";
+      }
+
+
+      const problems = [];
+      variants.forEach(function(v) {
+        const tot = (v.sold || 0) + (v.remaining || 0);
+        if (tot === 0) return;
+        const st = (v.sold || 0) / tot;
+        if (st < 0.25 && (v.remaining || 0) >= 2) {
+          problems.push((v.color || "?") + " / " + (v.size || "?") + " – shitur " + v.sold + ", mbetur " + v.remaining + " (sell-through " + (st * 100).toFixed(0) + "%)");
+        }
+      });
+      const problemsSection = document.getElementById("problems-section");
+      const problemsList = document.getElementById("problems-list");
+      problemsList.innerHTML = "";
+      if (problems.length) {
+        problemsSection.style.display = "block";
+        problems.forEach(function(p) {
+          const li = document.createElement("li");
+          li.textContent = p;
+          problemsList.appendChild(li);
+        });
+      } else {
+        problemsSection.style.display = "none";
+      }
+
+
+      const mgr = document.getElementById("manager-details");
+      mgr.innerHTML = "";
+      const mgrItems = [
+        "Sell-through total: " + (sellThrough * 100).toFixed(1) + "% (" + totalSold + " shitur / " + totalPieces + " total)",
+        "Rregullimi bazë i algoritmit: " + (adj * 100).toFixed(1) + "%",
+        "Çmimi minimal i lejuar: " + minPrice.toFixed(2) + " €",
+        floorApplied ? "⚠ U aplikua kufiri minimal i çmimit" : "Kufiri minimal nuk u prek",
+        isNew ? "Produkt i ri → ulja u bllokua" : "Produkt me mbi 7 ditë",
+        selectedReasons.length ? "Arsyet e zgjedhura: " + selectedReasons.map(function(r) { return r.label; }).join("; ") : "Nuk u zgjodh asnjë arsye ngecjeje"
+      ];
+      mgrItems.forEach(function(t) {
+        const li = document.createElement("li");
+        li.textContent = t;
+        mgr.appendChild(li);
+      });
+
+
+      document.getElementById("result-area").scrollIntoView({ behavior: "smooth", block: "start" });
+      saveDraft();
+    }
+
+
+    function showWarning(msg) {
+      const box = document.getElementById("warning-box");
+      box.textContent = msg;
+      box.style.display = "block";
+      document.getElementById("result-area").style.display = "block";
+      document.getElementById("action-card").style.display = "none";
+      document.getElementById("todo-list").innerHTML = "";
+      document.getElementById("problems-section").style.display = "none";
+      document.getElementById("fixes-section").style.display = "none";
+    }
+
+
+    function nicePrice(p) {
+      const rounded = Math.round(p * 2) / 2;
+      if (rounded - Math.floor(rounded) === 0) return rounded - 0.10;
+      return rounded;
+    }
+
+
+    function clearResult() {
+      document.getElementById("result-area").style.display = "none";
+      document.getElementById("action-card").style.display = "block";
+    }
+
+
+    function saveDraft() {
+      const data = {
+        name: document.getElementById("prod-name").value,
+        currentPrice: document.getElementById("current-price").value,
+        cost: document.getElementById("cost").value,
+        days: document.getElementById("days-online").value,
+        season: document.getElementById("season").value,
+        category: document.getElementById("category").value,
+        variants: variants,
+        reasons: REASONS.filter(function(r) {
+          const cb = document.getElementById("reason-" + r.id);
+          return cb && cb.checked;
+        }).map(function(r) { return r.id; })
+      };
+      try {
+        localStorage.setItem("pricingDraft", JSON.stringify(data));
+        const status = document.getElementById("save-status");
+        status.classList.add("show");
+        setTimeout(function() { status.classList.remove("show"); }, 1500);
+      } catch (e) {}
+    }
+
+
+    function loadDraft() {
+      try {
+        const raw = localStorage.getItem("pricingDraft");
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.name) document.getElementById("prod-name").value = data.name;
+        if (data.currentPrice) document.getElementById("current-price").value = data.currentPrice;
+        if (data.cost) document.getElementById("cost").value = data.cost;
+        if (data.days) document.getElementById("days-online").value = data.days;
+        if (data.season) document.getElementById("season").value = data.season;
+        if (data.category) document.getElementById("category").value = data.category;
+        if (Array.isArray(data.variants) && data.variants.length) {
+          variants = data.variants;
+          renderVariants();
+        }
+        if (Array.isArray(data.reasons)) {
+          data.reasons.forEach(function(id) {
+            const cb = document.getElementById("reason-" + id);
+            if (cb) {
+              cb.checked = true;
+              cb.closest(".reason-item").classList.add("checked");
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
+
+    init();
+  </script>
+</body>
+</html>
